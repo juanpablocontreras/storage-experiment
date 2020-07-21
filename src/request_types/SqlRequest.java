@@ -1,9 +1,10 @@
 package request_types;
 
-public class SqlToSqlRequest {
+public class SqlRequest {
+	
 	public String query;
 	
-	public SqlToSqlRequest(String query) {
+	public SqlRequest(String query) {
 		this.query = query;
 	}
 }

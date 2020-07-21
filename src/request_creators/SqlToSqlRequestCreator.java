@@ -1,12 +1,12 @@
 package request_creators;
 
-import request_types.SqlToSqlRequest;
+import request_types.SqlRequest;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.sql.*;
 
 public class SqlToSqlRequestCreator extends RequestCreator{
 
-	public SqlToSqlRequestCreator(ConcurrentLinkedQueue<SqlToSqlRequest> requestQeue, int queueCapacity) throws Exception {
+	public SqlToSqlRequestCreator(ConcurrentLinkedQueue<SqlRequest> requestQeue, int queueCapacity) throws Exception {
 		super(requestQeue, queueCapacity);
 	}
 	
@@ -46,7 +46,7 @@ public class SqlToSqlRequestCreator extends RequestCreator{
 				query += "\" " + rs.getString(3) + "\"";
 				query += str_e;
 						
-				SqlToSqlRequest request = new SqlToSqlRequest(query);
+				SqlRequest request = new SqlRequest(query);
 				this.ioRequestQueue.add(request);
 				System.out.println("Request Creator thread created: " + query );
 			}

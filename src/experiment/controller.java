@@ -16,7 +16,7 @@ public class controller {
 		
 		System.out.println("controller started...");
 		
-		ConcurrentLinkedQueue<SqlToSqlRequest> ioQueue = new ConcurrentLinkedQueue<SqlToSqlRequest>();
+		ConcurrentLinkedQueue<SqlRequest> ioQueue = new ConcurrentLinkedQueue<SqlRequest>();
 		int ioQueueCapacity = 20;
 		
 		int numIORequestsPerDataTransfer = 5;
