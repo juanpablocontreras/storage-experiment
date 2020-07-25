@@ -26,11 +26,9 @@ public class SqlRequestTransmitter {
 	
 	public void performIORequest(SqlRequest request) throws Exception {
 		
-		try {
-			Thread.sleep(200);
-		}catch(Exception e) {
-			
-		}
+		Statement stmt = this.sqlcon.createStatement(); 
+		
+		stmt.executeUpdate(request.query);
 		
 	}
 	

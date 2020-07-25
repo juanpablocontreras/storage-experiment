@@ -43,8 +43,6 @@ public class RequestHandler extends Thread{
 			
 			
 			
-			
-			
 			while(true) {
 				//One data transfer for each loop in
 				
@@ -59,19 +57,37 @@ public class RequestHandler extends Thread{
 				//build IOrequestsToTransfer list using the IO requests in the ioRequestQueue
 				int dataTransSize = this.numIOrequestsPerDataTransfer;
 				while(dataTransSize > 0) {
-					tempRequest = this.ioRequestQueue.poll();
 					
-					if(tempRequest != null) {
-						//add request to temporary list
-						IOrequestsToTransfer.add(tempRequest);
-						dataTransSize--;
+					//wait for data from IO queue
+					tempRequest = null;
+					while(tempRequest == null) {
+						System.out.println("handler waiting for new item...");
+						try {
+							Thread.sleep(interIOprocessTime);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							System.out.println(e);
+						}
+						tempRequest = this.ioRequestQueue.poll();
+						if(tempRequest == null) {
+							Iterator iterQ = ioRequestQueue.iterator();
+							while(iterQ.hasNext()) {
+								System.out.println("Item remaining");
+							}
+						}
 					}
+			
+					
+					//add request to data transfer cached list
+					IOrequestsToTransfer.add(tempRequest);
+					dataTransSize--;
+					
 					
 					try {
 						Thread.sleep(interIOprocessTime);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						System.out.println(e);
 					}
 				}
 				
@@ -86,7 +102,6 @@ public class RequestHandler extends Thread{
 				ArrayList<Long> transmitterTimes = new ArrayList<Long>();
 				transmitterTimes.add(System.currentTimeMillis());
 				
-		
 				//Transmit the data
 				SqlRequestTransmitter transmitter = new SqlRequestTransmitter(); //open connection
 				

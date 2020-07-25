@@ -1,6 +1,8 @@
 package request_creators;
 
 import request_types.SqlRequest;
+
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.sql.*;
 
@@ -37,6 +39,9 @@ public class SqlToSqlRequestCreator extends RequestCreator{
 			String str_i = "INSERT INTO Tweets VALUES (";
 			String str_e = ")";
 			
+			//testing
+			int i =0;
+			
 			while(rs.next()) {
 				String query = str_i;
 				query += rs.getInt(1);
@@ -49,9 +54,20 @@ public class SqlToSqlRequestCreator extends RequestCreator{
 				SqlRequest request = new SqlRequest(query);
 				this.ioRequestQueue.add(request);
 				System.out.println("Request Creator thread created: " + query );
+				i++;
 			}
 			
 			sqlcon.close();
+			
+			int numQitems = 0;
+			Iterator iterQ = this.ioRequestQueue.iterator();
+			
+			while(iterQ.hasNext()) {
+				System.out.println(numQitems++);
+				iterQ.next();
+			}
+			
+			System.out.println("The creator created " + i + " Tweets");
 			
 		}catch(Exception e) {
 			System.out.println(e);
