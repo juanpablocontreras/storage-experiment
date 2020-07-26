@@ -2,13 +2,13 @@ package request_transmitters;
 
 import java.sql.*;
 
-import request_types.SqlRequest;
+import request_types.*;
 
-public class SqlRequestTransmitter {
+public class SqlRequestTransmitter extends Transmitter{
 	
 	public Connection sqlcon = null;
 	
-	
+	/*
 	public SqlRequestTransmitter() throws Exception {
 		
 	
@@ -24,16 +24,53 @@ public class SqlRequestTransmitter {
 		this.sqlcon = sqlcon;
 	}
 	
-	public void performIORequest(SqlRequest request) throws Exception {
+	*/
+
+	@Override
+	public void setUpConnection(String params[]) {
+		//params:
+		//[0] Database name
+		//[1] Database user
+		//[2] Database user password
+		//[3] Table name
 		
-		Statement stmt = this.sqlcon.createStatement(); 
 		
-		stmt.executeUpdate(request.query);
+		System.out.println("setting up transmitter connection");
+		System.out.println(params[0]);
+		System.out.println(params[1]);
+		System.out.println(params[2]);
+		System.out.println(params[3]);
+		
+	}
+
+
+	@Override
+	public void performIORequest(IORequest request) {
+		
+		System.out.println("performing the IO request: " + request.id);
+	}
+
+
+	@Override
+	public void closeConnection() {
+		
+		System.out.println("closing transmitter connection");
+	}
+	
+	/*
+	public void performIORequest(IORequest request) {
+		
+		//Statement stmt = this.sqlcon.createStatement(); 
+		
+		//stmt.executeUpdate(request.query);
 		
 	}
 	
 	public void closeConnection() throws SQLException {
 		this.sqlcon.close();
 	}
+	*/
+	
+	
 	
 }

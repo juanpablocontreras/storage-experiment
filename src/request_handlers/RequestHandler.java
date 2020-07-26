@@ -2,6 +2,7 @@ package request_handlers;
 
 import request_types.*;
 import request_transmitters.*;
+import ioQueues.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,24 +11,24 @@ import java.util.Random;
 public class RequestHandler extends Thread{
 	
 	//Fields
-	protected ConcurrentLinkedQueue<SqlRequest> ioRequestQueue; //reference to the IORequestQueue
-	protected int queueCapacity;
+	protected SyncListIOQueue ioRequestQueue; //reference to the IORequestQueue
 	protected int numIOrequestsPerDataTransfer = 1;
 	protected int interIOprocessTime = 100;
+	protected int pollingTime = 100; //amount of time between unsuccessful polls
+	protected int numAttempts = 10; //number of attempts to get item from queue before proceeding to the data transfer anyway
+	protected Transmitter transmitter;
 	
-	
-	//Constructor(s)
-	public RequestHandler(	ConcurrentLinkedQueue<SqlRequest> requestQeue, 
-							int queueCapacity, 
-							int numIOrequestsPerDataTransfer) 
-							throws Exception
+	public RequestHandler(	
+			SyncListIOQueue requestQeue,
+			int numIOrequestsPerDataTransfer, 
+			Transmitter transmitter) throws Exception
 	{
 		if(requestQeue == null) {
 			throw new Exception("constructor queue not initialized");
 		}
 		this.ioRequestQueue = requestQeue;
-		this.queueCapacity = queueCapacity;
 		this.numIOrequestsPerDataTransfer = numIOrequestsPerDataTransfer;
+		this.transmitter = transmitter;
 	}
 	
 	
@@ -38,65 +39,27 @@ public class RequestHandler extends Thread{
 		
 		try {
 			//list to hold the IO requests for one data transfer
-			ConcurrentLinkedQueue<SqlRequest> IOrequestsToTransfer = new ConcurrentLinkedQueue<SqlRequest>();
-			SqlRequest tempRequest;
-			
+			SyncListIOQueue dataTransferIORequests;
 			
 			
 			while(true) {
-				//One data transfer for each loop in
+				//Perform 1 data transfer
 				
 				
-				/*
-				 * GET the IO requests for the data transfer
-				 */
+				//GET all IO requests for the data transfer into the cached list
+				dataTransferIORequests = getRequestsForTransfer();
 				
-				
-				IOrequestsToTransfer.clear();
-				
-				//build IOrequestsToTransfer list using the IO requests in the ioRequestQueue
-				int dataTransSize = this.numIOrequestsPerDataTransfer;
-				while(dataTransSize > 0) {
-					
-					//wait for data from IO queue
-					tempRequest = null;
-					while(tempRequest == null) {
-						System.out.println("handler waiting for new item...");
-						try {
-							Thread.sleep(interIOprocessTime);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							System.out.println(e);
-						}
-						tempRequest = this.ioRequestQueue.poll();
-						if(tempRequest == null) {
-							Iterator iterQ = ioRequestQueue.iterator();
-							while(iterQ.hasNext()) {
-								System.out.println("Item remaining");
-							}
-						}
-					}
-			
-					
-					//add request to data transfer cached list
-					IOrequestsToTransfer.add(tempRequest);
-					dataTransSize--;
-					
-					
-					try {
-						Thread.sleep(interIOprocessTime);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						System.out.println(e);
-					}
+				//Perform the IO requests of the data transfer
+				if(dataTransferIORequests != null && !dataTransferIORequests.isEmpty()) {
+					performDataTransferIORequests(dataTransferIORequests);
+				}else {
+					System.out.println("No Requests...");
+					Thread.sleep(pollingTime);
 				}
 				
 				
 				/*
-				 * 	Perform the IO requests of the data transfer
-				 */
 				
-				System.out.println("---------START DATA TRANSFER-------");
 				
 				//Clear cache IO queue and start time measurements
 				ArrayList<Long> transmitterTimes = new ArrayList<Long>();
@@ -106,7 +69,7 @@ public class RequestHandler extends Thread{
 				SqlRequestTransmitter transmitter = new SqlRequestTransmitter(); //open connection
 				
 				while(!IOrequestsToTransfer.isEmpty()) {
-					System.out.println("Handler Thread is transmitting request " + IOrequestsToTransfer.peek().query);
+					System.out.println("Handler Thread is transmitting request " + IOrequestsToTransfer.peek().operation);
 					transmitter.performIORequest(IOrequestsToTransfer.poll());
 					transmitterTimes.add(System.currentTimeMillis()); //measure time
 				}
@@ -117,8 +80,8 @@ public class RequestHandler extends Thread{
 				while(timeIter.hasNext()) {
 					System.out.println(timeIter.next());
 				}
+				*/
 				
-				System.out.println("---------END DATA TRANSFER-------");
 			}
 		}catch(Exception e){
 			System.out.println(e);
@@ -127,6 +90,63 @@ public class RequestHandler extends Thread{
 		
 	}
 	
+	private SyncListIOQueue getRequestsForTransfer() throws InterruptedException {
+		
+		SyncListIOQueue dataTransferIORequests = new SyncListIOQueue(this.numIOrequestsPerDataTransfer);
+		IORequest tempRequest;
+		
+		//GET all IO requests for the data transfer into the cached list
+		int dataTransSize = this.numIOrequestsPerDataTransfer;
+		while(dataTransSize > 0) {
+			
+			//try getting an item from the IO queue
+			tempRequest = this.ioRequestQueue.poll();
+			if(tempRequest == null) {
+				int attempt = numAttempts;
+				
+				while(tempRequest == null) {
+					Thread.sleep(pollingTime);
+					
+					if(attempt-- <= 0) {
+						return dataTransferIORequests; //all attempts were made to get the item from queue
+					}
+				}
+			}
+			
+			dataTransferIORequests.add(tempRequest); //add request to data transfer cached list
+			dataTransSize--;
+			
+			Thread.sleep(interIOprocessTime);
+		}
+		
+		return dataTransferIORequests;
+	}
 	
+	private void performDataTransferIORequests(SyncListIOQueue dataTransferIORequests) 
+	{
+		synchronized(dataTransferIORequests) {
+			
+			if(dataTransferIORequests != null && !dataTransferIORequests.isEmpty()) {
+				
+				System.out.println("---------START DATA TRANSFER-------");
+				
+				//set up connection
+				IORequest temReq = dataTransferIORequests.peek();
+				String[] params = temReq.targetConnectionParams;
+				this.transmitter.setUpConnection(params);
+				
+				//transmit the data
+				while(!dataTransferIORequests.isEmpty()) {
+					transmitter.performIORequest(dataTransferIORequests.poll());
+				}
+				
+				//close connection
+				transmitter.closeConnection();
+				
+				System.out.println("---------END DATA TRANSFER-------");
+				
+			}
+		}
+	}
 	
 }
