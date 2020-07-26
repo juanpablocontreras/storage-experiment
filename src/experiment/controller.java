@@ -25,11 +25,11 @@ public class controller {
 			//Instantiate SQL request creator
 			SqlRCreator creator = new SqlRCreator(
 					ioqueue, 
-					"STRG_EXP_ORIG",
-					"STRG_EXP_TARGET",
+					"EXP_ORIG",
+					"EXP_TARGET",
 					"juan",
-					"Matusalen13",
-					"Small");
+					"LapinCoquin13",
+					"Small100_ORIG");
 			
 			Transmitter sqlTransmitter = new SqlRequestTransmitter();
 			RequestHandler handler = new RequestHandler(

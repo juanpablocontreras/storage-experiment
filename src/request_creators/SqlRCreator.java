@@ -49,7 +49,7 @@ public class SqlRCreator extends Thread {
 			this.orig_db_name +
 			"?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
 			"juan",
-			"Matusalen13"); 
+			this.target_db_password); 
 			
 			//set up parameters for target db
 			String[] params = new String[4];
