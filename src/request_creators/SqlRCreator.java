@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Iterator;
 
+import request_types.OperationType;
 import request_types.SqlRequest;
 import ioQueues.*;
 
@@ -79,12 +80,13 @@ public class SqlRCreator extends Thread {
 						0, 				//size
 						rs.getInt(1), 
 						params, 
-						this.target_db_name, 
-						this.tableName);
+						query,
+						OperationType.PUT);
 				
 				this.ioRequestQueue.add(request);
 				System.out.println("Request Creator thread created: " + query );
 				i++;
+				
 			}
 			
 			sqlcon.close();

@@ -8,52 +8,59 @@ public class SqlRequestTransmitter extends Transmitter{
 	
 	public Connection sqlcon = null;
 	
-	/*
-	public SqlRequestTransmitter() throws Exception {
+
+	@Override
+	public void setUpConnection(String params[]) throws Exception {
+		//params:
+		//[0] Target Database name
+		//[1] Target Database user
+		//[2] Target Database user password
+		//[3] Target Table name
 		
-	
 		//db driver registration
 		Class.forName("com.mysql.jdbc.Driver"); 
 
 		//connection
 		Connection sqlcon = DriverManager.getConnection(
 				"jdbc:mysql://localhost:3306/" + 
-				"STRG_EXP_TARGET?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
-				"juan",
-				"Matusalen13"); 
+				params[0] +
+				"?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
+				params[1],
+				params[2]); 
 		this.sqlcon = sqlcon;
-	}
-	
-	*/
-
-	@Override
-	public void setUpConnection(String params[]) {
-		//params:
-		//[0] Database name
-		//[1] Database user
-		//[2] Database user password
-		//[3] Table name
-		
-		
-		System.out.println("setting up transmitter connection");
-		System.out.println(params[0]);
-		System.out.println(params[1]);
-		System.out.println(params[2]);
-		System.out.println(params[3]);
 		
 	}
 
 
 	@Override
-	public void performIORequest(IORequest request) {
+	public void performIORequest(IORequest request) throws Exception {
 		
 		System.out.println("performing the IO request: " + request.id);
+		System.out.println("Query: " + request.operation);
+		
+		Statement stmt = this.sqlcon.createStatement(); 
+		
+		switch(request.optype) {
+		case GET:
+			stmt.executeQuery(request.operation);
+			break;
+		case POST:
+		case PUT:
+		case PATCH:
+		case DELETE:
+			stmt.executeUpdate(request.operation);
+			break;
+		default:
+			stmt.executeQuery(request.operation);
+			break;
+		}
 	}
 
 
 	@Override
-	public void closeConnection() {
+	public void closeConnection() throws Exception {
 		
+		this.sqlcon.close();
 		System.out.println("closing transmitter connection");
 	}
 	

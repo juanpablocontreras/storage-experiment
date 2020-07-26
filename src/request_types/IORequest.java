@@ -16,11 +16,15 @@ public class IORequest {
 	public IORequest(
 			long size, 
 			long id,
-			String[] targetConnectionParams) 
+			String[] targetConnectionParams, 
+			String operation,
+			OperationType optype) 
 	{
 		this.size = size;
 		this.id = id;
 		this.targetConnectionParams = targetConnectionParams;
+		this.operation = operation;
+		this.optype = optype;
 	}
 	
 }

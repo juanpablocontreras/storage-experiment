@@ -122,7 +122,7 @@ public class RequestHandler extends Thread{
 		return dataTransferIORequests;
 	}
 	
-	private void performDataTransferIORequests(SyncListIOQueue dataTransferIORequests) 
+	private void performDataTransferIORequests(SyncListIOQueue dataTransferIORequests) throws Exception 
 	{
 		synchronized(dataTransferIORequests) {
 			
