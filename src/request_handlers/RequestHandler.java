@@ -45,7 +45,6 @@ public class RequestHandler extends Thread{
 			while(true) {
 				//Perform 1 data transfer
 				
-				
 				//GET all IO requests for the data transfer into the cached list
 				dataTransferIORequests = getRequestsForTransfer();
 				
@@ -128,6 +127,17 @@ public class RequestHandler extends Thread{
 			
 			if(dataTransferIORequests != null && !dataTransferIORequests.isEmpty()) {
 				
+				//output IOqueue wait times
+				Iterator<IORequest> IOiter = dataTransferIORequests.iterator();
+				while(IOiter.hasNext()) {
+					IORequest tempReq = IOiter.next();
+					long queueTime = tempReq.queueTimePolled - tempReq.queueTimeArrival;
+					System.out.println("Request ID " + tempReq.id + " spent " + queueTime + " in IO queue");
+				}
+				
+				//Set up transmitter time measurements
+				ArrayList<Long> transmitterTimes = new ArrayList<Long>();
+				
 				System.out.println("---------START DATA TRANSFER-------");
 				
 				//set up connection
@@ -136,12 +146,18 @@ public class RequestHandler extends Thread{
 				this.transmitter.setUpConnection(params);
 				
 				//transmit the data
+				transmitterTimes.add(System.currentTimeMillis());
 				while(!dataTransferIORequests.isEmpty()) {
 					transmitter.performIORequest(dataTransferIORequests.poll());
+					transmitterTimes.add(System.currentTimeMillis());
 				}
 				
 				//close connection
 				transmitter.closeConnection();
+				System.out.println("Transmitter times");
+				for(int i=1; i<transmitterTimes.size();i++) {
+					System.out.println(transmitterTimes.get(i) - transmitterTimes.get(i-1));
+				}
 				
 				System.out.println("---------END DATA TRANSFER-------");
 				

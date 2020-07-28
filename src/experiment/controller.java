@@ -29,7 +29,7 @@ public class controller {
 					"EXP_TARGET",
 					"juan",
 					"LapinCoquin13",
-					"Small100_ORIG");
+					"Small100");
 			
 			Transmitter sqlTransmitter = new SqlRequestTransmitter();
 			RequestHandler handler = new RequestHandler(

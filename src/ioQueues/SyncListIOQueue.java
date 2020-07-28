@@ -44,6 +44,10 @@ public class SyncListIOQueue {
 		return this.queue.get(0);
 	}
 	
+	public synchronized Iterator<IORequest> iterator() {
+		return this.queue.iterator();
+	}
+	
 	public synchronized void printIds() {
 		
 		if(this.queue.isEmpty()) {

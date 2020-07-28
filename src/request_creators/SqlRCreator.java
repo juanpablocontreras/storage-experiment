@@ -73,7 +73,7 @@ public class SqlRCreator extends Thread {
 				String query = str_i;
 				query += rs.getInt(1);
 				query += ",";
-				query += "\" " + rs.getString(2) + "\"";
+				query += "\"" + rs.getString(2) + "\"";
 				query += str_e;
 						
 				SqlRequest request = new SqlRequest(
