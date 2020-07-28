@@ -13,7 +13,7 @@ public class RequestHandler extends Thread{
 	//Fields
 	protected SyncListIOQueue ioRequestQueue; //reference to the IORequestQueue
 	protected int numIOrequestsPerDataTransfer = 1;
-	protected int interIOprocessTime = 100;
+	protected int interIOprocessTime = 1000;
 	protected int pollingTime = 100; //amount of time between unsuccessful polls
 	protected int numAttempts = 10; //number of attempts to get item from queue before proceeding to the data transfer anyway
 	protected Transmitter transmitter;
@@ -39,7 +39,7 @@ public class RequestHandler extends Thread{
 		
 		try {
 			//list to hold the IO requests for one data transfer
-			SyncListIOQueue dataTransferIORequests;
+			ArrayList<IORequest> dataTransferIORequests;
 			
 			
 			while(true) {
@@ -55,32 +55,6 @@ public class RequestHandler extends Thread{
 					System.out.println("No Requests...");
 					Thread.sleep(pollingTime);
 				}
-				
-				
-				/*
-				
-				
-				//Clear cache IO queue and start time measurements
-				ArrayList<Long> transmitterTimes = new ArrayList<Long>();
-				transmitterTimes.add(System.currentTimeMillis());
-				
-				//Transmit the data
-				SqlRequestTransmitter transmitter = new SqlRequestTransmitter(); //open connection
-				
-				while(!IOrequestsToTransfer.isEmpty()) {
-					System.out.println("Handler Thread is transmitting request " + IOrequestsToTransfer.peek().operation);
-					transmitter.performIORequest(IOrequestsToTransfer.poll());
-					transmitterTimes.add(System.currentTimeMillis()); //measure time
-				}
-				transmitter.closeConnection(); //close connection
-				
-				//Output Time results
-				Iterator<Long> timeIter = transmitterTimes.iterator();
-				while(timeIter.hasNext()) {
-					System.out.println(timeIter.next());
-				}
-				*/
-				
 			}
 		}catch(Exception e){
 			System.out.println(e);
@@ -89,9 +63,10 @@ public class RequestHandler extends Thread{
 		
 	}
 	
-	private SyncListIOQueue getRequestsForTransfer() throws InterruptedException {
+	private ArrayList<IORequest> getRequestsForTransfer() throws InterruptedException {
 		
-		SyncListIOQueue dataTransferIORequests = new SyncListIOQueue(this.numIOrequestsPerDataTransfer);
+		//SyncListIOQueue dataTransferIORequests = new SyncListIOQueue(this.numIOrequestsPerDataTransfer);
+		ArrayList<IORequest> dataTransferIORequests = new ArrayList<IORequest>();
 		IORequest tempRequest;
 		
 		//GET all IO requests for the data transfer into the cached list
@@ -121,19 +96,23 @@ public class RequestHandler extends Thread{
 		return dataTransferIORequests;
 	}
 	
-	private void performDataTransferIORequests(SyncListIOQueue dataTransferIORequests) throws Exception 
+	private void performDataTransferIORequests(ArrayList<IORequest> dataTransferIORequests) throws Exception 
 	{
 		synchronized(dataTransferIORequests) {
 			
 			if(dataTransferIORequests != null && !dataTransferIORequests.isEmpty()) {
 				
 				//output IOqueue wait times
+				
 				Iterator<IORequest> IOiter = dataTransferIORequests.iterator();
 				while(IOiter.hasNext()) {
 					IORequest tempReq = IOiter.next();
 					long queueTime = tempReq.queueTimePolled - tempReq.queueTimeArrival;
-					System.out.println("Request ID " + tempReq.id + " spent " + queueTime + " in IO queue");
+					//System.out.println("Request ID " + tempReq.id + " Queue Arrival time: " + tempReq.queueTimeArrival);
+					//System.out.println("Request ID " + tempReq.id + " Queue Retirval time: " + tempReq.queueTimePolled);
+					System.out.println("Handler detected request ID " + tempReq.id + " spent " + queueTime + " in IO queue");
 				}
+				
 				
 				//Set up transmitter time measurements
 				ArrayList<Long> transmitterTimes = new ArrayList<Long>();
@@ -141,19 +120,22 @@ public class RequestHandler extends Thread{
 				System.out.println("---------START DATA TRANSFER-------");
 				
 				//set up connection
-				IORequest temReq = dataTransferIORequests.peek();
+				IORequest temReq = dataTransferIORequests.get(0);
 				String[] params = temReq.targetConnectionParams;
 				this.transmitter.setUpConnection(params);
 				
 				//transmit the data
 				transmitterTimes.add(System.currentTimeMillis());
-				while(!dataTransferIORequests.isEmpty()) {
-					transmitter.performIORequest(dataTransferIORequests.poll());
+				
+				for(IORequest request:dataTransferIORequests) {
+					transmitter.performIORequest(request);
 					transmitterTimes.add(System.currentTimeMillis());
 				}
 				
 				//close connection
 				transmitter.closeConnection();
+				
+				//output transmitter times
 				System.out.println("Transmitter times");
 				for(int i=1; i<transmitterTimes.size();i++) {
 					System.out.println(transmitterTimes.get(i) - transmitterTimes.get(i-1));

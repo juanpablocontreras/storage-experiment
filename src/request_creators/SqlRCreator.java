@@ -64,9 +64,14 @@ public class SqlRCreator extends Thread {
 
 			String str_i = "INSERT INTO " + this.tableName + " VALUES (";
 			String str_e = ")";
+			long startTime;
+			long endTime;
+			long totalTime;
 			
 			//Get all 100 rows, one by one, and send them to the queue one by one
 			for(int i=0; i<100; i++) {
+				
+				startTime = System.currentTimeMillis();
 				
 				//get row
 				ResultSet rs = stmt.executeQuery("SELECT * FROM " + this.tableName + " WHERE id=" + i);
@@ -90,6 +95,10 @@ public class SqlRCreator extends Thread {
 					while(!this.ioRequestQueue.add(request)) {
 						Thread.sleep(100);
 					}
+					
+					endTime = System.currentTimeMillis();
+					totalTime = endTime - startTime;
+					//System.out.println("Creator created new item in " + totalTime);
 				}
 			}
 			

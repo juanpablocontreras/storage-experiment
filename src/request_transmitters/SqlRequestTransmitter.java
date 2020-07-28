@@ -64,20 +64,4 @@ public class SqlRequestTransmitter extends Transmitter{
 		System.out.println("closing transmitter connection");
 	}
 	
-	/*
-	public void performIORequest(IORequest request) {
-		
-		//Statement stmt = this.sqlcon.createStatement(); 
-		
-		//stmt.executeUpdate(request.query);
-		
-	}
-	
-	public void closeConnection() throws SQLException {
-		this.sqlcon.close();
-	}
-	*/
-	
-	
-	
 }
