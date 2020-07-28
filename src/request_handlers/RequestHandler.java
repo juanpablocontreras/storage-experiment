@@ -65,7 +65,6 @@ public class RequestHandler extends Thread{
 	
 	private ArrayList<IORequest> getRequestsForTransfer() throws InterruptedException {
 		
-		//SyncListIOQueue dataTransferIORequests = new SyncListIOQueue(this.numIOrequestsPerDataTransfer);
 		ArrayList<IORequest> dataTransferIORequests = new ArrayList<IORequest>();
 		IORequest tempRequest;
 		
