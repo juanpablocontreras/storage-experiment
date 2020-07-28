@@ -60,39 +60,40 @@ public class SqlRCreator extends Thread {
 			
 			//get every row of table (2 columns: must be int id and varchar data)
 			Statement stmt=sqlcon.createStatement(); 
-			ResultSet rs = stmt.executeQuery("SELECT * FROM " + this.tableName);
 			
-			//for every Tweet: wrap it into an IO request and send it to the IO queue
+
 			String str_i = "INSERT INTO " + this.tableName + " VALUES (";
 			String str_e = ")";
 			
-			//testing
-			int i =0;
-			
-			while(rs.next()) {
-				String query = str_i;
-				query += rs.getInt(1);
-				query += ",";
-				query += "\"" + rs.getString(2) + "\"";
-				query += str_e;
-						
-				SqlRequest request = new SqlRequest(
-						0, 				//size
-						rs.getInt(1), 
-						params, 
-						query,
-						OperationType.PUT);
+			//Get all 100 rows, one by one, and send them to the queue one by one
+			for(int i=0; i<100; i++) {
 				
-				this.ioRequestQueue.add(request);
-				System.out.println("Request Creator thread created: " + query );
-				i++;
+				//get row
+				ResultSet rs = stmt.executeQuery("SELECT * FROM " + this.tableName + " WHERE id=" + i);
 				
+				//process row into an IORequest
+				while(rs.next()) {
+					String query = str_i;
+					query += rs.getInt(1);
+					query += ",";
+					query += "\"" + rs.getString(2) + "\"";
+					query += str_e;
+							
+					SqlRequest request = new SqlRequest(
+							0, 				//size
+							rs.getInt(1), 
+							params, 
+							query,
+							OperationType.PUT);
+					
+					//put request in queue when space is available
+					while(!this.ioRequestQueue.add(request)) {
+						Thread.sleep(100);
+					}
+				}
 			}
 			
 			sqlcon.close();
-			
-			//testing
-			this.ioRequestQueue.printIds();
 			
 		}catch(Exception e) {
 			System.out.println(e);
