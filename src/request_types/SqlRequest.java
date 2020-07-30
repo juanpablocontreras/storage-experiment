@@ -8,8 +8,9 @@ public class SqlRequest extends IORequest{
 			long id,
 			String[] targetConnectionParams,
 			String operation,
-			OperationType optype)
+			OperationType optype,
+			boolean isLastItem)
 	{
-		super(size, id, targetConnectionParams,operation,optype);
+		super(size, id, targetConnectionParams,operation,optype,isLastItem);
 	}
 }

@@ -18,6 +18,7 @@ public class SqlRCreator extends Thread {
 	private String tableName;
 	private String target_db_user;
 	private String target_db_password;
+	private int lastItemId = 99;
 	
 	public SqlRCreator(
 			SyncListIOQueue queue, 
@@ -67,6 +68,7 @@ public class SqlRCreator extends Thread {
 			long startTime;
 			long endTime;
 			long totalTime;
+			boolean isLastItem = false;
 			
 			//Get all 100 rows, one by one, and send them to the queue one by one
 			for(int i=0; i<100; i++) {
@@ -83,13 +85,19 @@ public class SqlRCreator extends Thread {
 					query += ",";
 					query += "\"" + rs.getString(2) + "\"";
 					query += str_e;
+					
+					//indicate this is the last item to the handler using IORequest isLastItem field
+					if(rs.getInt(1) == this.lastItemId) {
+						isLastItem = true;
+					}
 							
 					SqlRequest request = new SqlRequest(
 							0, 				//size
 							rs.getInt(1), 
 							params, 
 							query,
-							OperationType.PUT);
+							OperationType.PUT,
+							isLastItem);
 					
 					//put request in queue when space is available
 					while(!this.ioRequestQueue.add(request)) {

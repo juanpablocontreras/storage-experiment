@@ -4,8 +4,6 @@ import request_types.*;
 import request_transmitters.*;
 import ioQueues.*;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
@@ -18,6 +16,7 @@ public class RequestHandler extends Thread{
 	protected int pollingTime = 100; //amount of time between unsuccessful polls
 	protected int numAttempts = 10; //number of attempts to get item from queue before proceeding to the data transfer anyway
 	protected Transmitter transmitter;
+	protected boolean wasLastItemProcessed = false;
 	
 	protected String logFolderPath = "logs";
 	protected PrintWriter printQueueLog_line;
@@ -37,7 +36,6 @@ public class RequestHandler extends Thread{
 	}
 	
 	
-	
 	@Override
 	public void run() {
 		//Perform Data transfers until application is closed
@@ -49,7 +47,7 @@ public class RequestHandler extends Thread{
 			//set up first append_to_file to false so previous files are erased
 			boolean append_to_file = false;
 			
-			while(true) {
+			while(!wasLastItemProcessed) {
 				//Perform 1 data transfer
 				
 				//create or set up the log files and writers
@@ -130,6 +128,13 @@ public class RequestHandler extends Thread{
 				for(IORequest request:dataTransferIORequests) {
 					transmitter.performIORequest(request);
 					transmitterTimes.add(System.currentTimeMillis());
+					
+					//check if last item was processed
+					if(request.isLastItem) {
+						this.wasLastItemProcessed = true;
+						closPrinters();
+						System.out.println("All items processed. experiment finished");
+					}
 				}
 				
 				//close connection

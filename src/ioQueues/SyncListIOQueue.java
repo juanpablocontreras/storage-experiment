@@ -20,7 +20,7 @@ public class SyncListIOQueue {
 		if(this.queue.size() < this.maxSize) {
 			request.queueTimeArrival = System.currentTimeMillis();
 			this.queue.add(request);
-			System.out.println("Request ID: " + request.id + " added to queue at time: " + request.queueTimeArrival);
+			//System.out.println("Request ID: " + request.id + " added to queue at time: " + request.queueTimeArrival);
 			return true;
 		}else {
 			return false;
@@ -31,7 +31,7 @@ public class SyncListIOQueue {
 		if(!this.queue.isEmpty()) {
 			IORequest temp = this.queue.remove(0);
 			temp.queueTimePolled = System.currentTimeMillis();
-			System.out.println("Request ID: " + temp.id + " Removed from Queue at time: " + temp.queueTimePolled);
+			//System.out.println("Request ID: " + temp.id + " Removed from Queue at time: " + temp.queueTimePolled);
 			return temp;
 		}else {
 			return null;

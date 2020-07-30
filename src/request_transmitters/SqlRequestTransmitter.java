@@ -36,7 +36,7 @@ public class SqlRequestTransmitter extends Transmitter{
 	public void performIORequest(IORequest request) throws Exception {
 		
 		System.out.println("performing the IO request: " + request.id);
-		System.out.println("Query: " + request.operation);
+		//System.out.println("Query: " + request.operation);
 		
 		Statement stmt = this.sqlcon.createStatement(); 
 		
@@ -61,7 +61,7 @@ public class SqlRequestTransmitter extends Transmitter{
 	public void closeConnection() throws Exception {
 		
 		this.sqlcon.close();
-		System.out.println("closing transmitter connection");
+		//System.out.println("closing transmitter connection");
 	}
 	
 }
